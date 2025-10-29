@@ -14,28 +14,21 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const fetchAll = async () => {
-    if (!name.trim()) return;
-    setLoading(true);
-    setError("");
+const fetchAll = async () => {
+  if (!name.trim()) return;
+  setLoading(true);
+  try {
+    // encode whole Riot ID including #
+    const { data } = await api.get(`/api/riot/${region}/${encodeURIComponent(name)}`);
+    setData(data);
+  } catch (e) {
+    console.error(e);
     setData(null);
+  } finally {
+    setLoading(false);
+  }
+};
 
-    try {
-      // ✅ FIX 1: Use backticks for template literals
-      // ✅ FIX 2: Updated path to match backend route: /api/summary/:summonerName
-      // Include region as query param, since backend can read it from req.query.region
-      const response = await api.get<CombinedResponse>(
-        `/api/summary/${encodeURIComponent(name)}?region=${region}`
-      );
-
-      setData(response.data);
-    } catch (e: any) {
-      console.error("Fetch failed:", e);
-      setError("Failed to load data. Check the name or try again later.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <main className="p-6 space-y-4">

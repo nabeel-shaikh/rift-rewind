@@ -1,8 +1,8 @@
+// server/src/routes/riot.routes.js
 const { Router } = require("express");
-const { getSummary } = require("../controllers/riot.controller");
-const { validateSummoner } = require("../middleware/validate");
+const { getRiotData } = require("../controllers/riot.controller");
 
 const router = Router();
-router.get("/:summonerName", validateSummoner, getSummary); // /api/riot/:summonerName
-module.exports = router;
+router.get("/:region/:summonerName", getRiotData);
 
+module.exports = router;
