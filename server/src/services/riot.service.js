@@ -1,20 +1,4 @@
 // server/src/services/riot.service.js
-<<<<<<< HEAD
-const RIOT_API_KEY = process.env.RIOT_API_KEY;
-console.log("Loaded RIOT_API_KEY:", RIOT_API_KEY ? "✅ exists" : "❌ missing");
-
-function getCluster(region) {
-  region = region.toLowerCase();
-  if (["na", "na1", "br1", "la1", "la2"].includes(region)) return "americas";
-  if (["euw", "euw1", "eun1", "tr1", "ru"].includes(region)) return "europe";
-  if (["kr", "jp1"].includes(region)) return "asia";
-  return "americas"; // fallback
-}
-
-async function fetchJson(url) {
-  console.log("Fetching:", url);
-  const res = await fetch(url, { headers: { "X-Riot-Token": RIOT_API_KEY } });
-=======
 const RIOT_API_KEY = (process.env.RIOT_API_KEY || "").trim();
 
 const PLATFORM_TO_ROUTING = (platform) => {
@@ -34,7 +18,6 @@ async function fetchJson(url) {
       "Accept-Charset": "application/x-www-form-urlencoded; charset=UTF-8",
     },
   });
->>>>>>> main
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Riot API error ${res.status}: ${text}`);
@@ -42,25 +25,6 @@ async function fetchJson(url) {
   return res.json();
 }
 
-<<<<<<< HEAD
-async function fetchRiotStats(region, summonerName) {
-  const cluster = getCluster(region);
-  const [gameName, tagLine = "NA1"] = summonerName.split("#");
-
-  console.log(`Fetching stats for ${gameName}#${tagLine} (${region}) via ${cluster}`);
-
-  // ✅ Step 1: Get Riot account
-  const account = await fetchJson(
-    `https://${cluster}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`
-  );
-
-  console.log("Account found:", account);
-  const puuid = account.puuid;
-
-  // ✅ Step 2: Get last few matches
-  const matchIds = await fetchJson(
-    `https://${cluster}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=1`
-=======
 /**
  * region = platform region like 'na1', 'euw1'
  * summonerName = Riot gameName without tagline (but we’ll prefer Riot ID path)
@@ -85,22 +49,9 @@ async function fetchRiotStats(region, summonerName, tagLine = "NA1", { rankedOnl
   const queueParam = rankedOnly ? "&queue=420" : "";
   const matchIds = await fetchJson(
     `https://${routing}.api.riotgames.com/lol/match/v5/matches/by-puuid/${encodeURIComponent(puuid)}/ids?start=0&count=${count}${queueParam}`
->>>>>>> main
   );
   console.log("Fetched match IDs:", matchIds);
 
-<<<<<<< HEAD
-  // ✅ Step 3: Pull match details
-  const matches = await Promise.all(
-    matchIds.map(id =>
-      fetchJson(`https://${cluster}.api.riotgames.com/lol/match/v5/matches/${id}`)
-    )
-  );
-
-  console.log("Sample matches:", matches.slice(0, 1));
-
-  return { puuid, matchCount: matchIds.length, sample: matches.slice(0, 2) };
-=======
   if (!Array.isArray(matchIds) || matchIds.length === 0) {
     return {
       totalGames: 0,
@@ -145,7 +96,6 @@ async function fetchRiotStats(region, summonerName, tagLine = "NA1", { rankedOnl
     topChamps,
     summoner: { name: account.gameName, tagLine: account.tagLine, level: summoner.summonerLevel },
   };
->>>>>>> main
 }
 
 module.exports = { fetchRiotStats };
