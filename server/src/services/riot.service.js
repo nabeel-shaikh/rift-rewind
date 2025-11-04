@@ -50,6 +50,7 @@ async function fetchRiotStats(region, summonerName, tagLine = "NA1", { rankedOnl
   const matchIds = await fetchJson(
     `https://${routing}.api.riotgames.com/lol/match/v5/matches/by-puuid/${encodeURIComponent(puuid)}/ids?start=0&count=${count}${queueParam}`
   );
+  console.log("Fetched match IDs:", matchIds);
 
   if (!Array.isArray(matchIds) || matchIds.length === 0) {
     return {
