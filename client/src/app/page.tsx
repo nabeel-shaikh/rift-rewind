@@ -1,7 +1,7 @@
-"use client";
-import { useState } from "react";
-import { api } from "@/lib/axios";
+// client/src/app/page.tsx
+import { redirect } from "next/navigation";
 
+<<<<<<< HEAD
 type CombinedResponse = {
   stats: any;
   summary: string;
@@ -85,3 +85,8 @@ const fetchAll = async () => {
     </main>
   );
 }
+=======
+export default function RootRedirect() {
+  redirect("/home");
+}
+>>>>>>> main
