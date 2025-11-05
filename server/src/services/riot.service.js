@@ -44,7 +44,7 @@ async function getSummonerByPuuid(region, puuid) {
  * summonerName = Riot gameName without tagline (but we’ll prefer Riot ID path)
  * tagLine = Riot tagline like 'NA1'
  */
-async function fetchRiotStats(region, summonerName, tagLine = "NA1", { rankedOnly = false, count = 10 } = {}) {
+async function fetchRiotStats(region, summonerName, tagLine = "NA1", { rankedOnly = false, count = 15 } = {}) {
   // 1) Get PUUID via Riot ID (gameName + tagLine) – handles accents
   //    If the user typed without accents, the service still resolves the correct account.
   const routing = PLATFORM_TO_ROUTING(region);
@@ -98,15 +98,33 @@ async function fetchRiotStats(region, summonerName, tagLine = "NA1", { rankedOnl
     .slice(0, 3)
     .map(([name, games]) => ({ name, games }));
 
-  return {
-    totalGames: agg.totalGames,
-    matchesAnalyzed: agg.totalGames,
-    kda: avgKDA.toFixed(2),
-    winRate,
-    topChamps,
-    summoner: { name: account.gameName, tagLine: account.tagLine, level: summoner.summonerLevel },
-  };
-}
+    return {
+      totalGames: agg.totalGames,
+      matchesAnalyzed: agg.totalGames,
+      kda: avgKDA.toFixed(2),
+      winRate,
+      topChamps,
+      summoner: { 
+        name: account.gameName, 
+        tagLine: account.tagLine, 
+        level: summoner.summonerLevel 
+      },
+      matches: matches.map((m) => {
+        const p = m.info.participants.find((p) => p.puuid === puuid);
+        return {
+          champion: p.championName,
+          kills: p.kills,
+          deaths: p.deaths,
+          assists: p.assists,
+          win: p.win,
+          mode: m.info.gameMode,
+          queueId: m.info.queueId,
+          duration: m.info.gameDuration,
+          timestamp: m.info.gameStartTimestamp,
+        };
+      })
+    };
+  }
 
 async function fetchProfile(region, summonerName, tagLine = "NA1") {
   const account = await getAccountByRiotId(region, summonerName, tagLine);
