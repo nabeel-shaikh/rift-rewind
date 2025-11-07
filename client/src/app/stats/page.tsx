@@ -1,24 +1,53 @@
 "use client";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { api } from "@/lib/axios";
 
 export default function StatsPage() {
+  const searchParams = useSearchParams();
+  const region = searchParams.get("region") || "na1";
+  const name = searchParams.get("name") || "";
+  const tag = searchParams.get("tag") || region.toUpperCase();
+
   const [data, setData] = useState<any>(null);
-  const [name, setName] = useState("");
-  const [region, setRegion] = useState("");
   const [filterCount, setFilterCount] = useState(5);
+  const [loading, setLoading] = useState(true);     // page loading
+  const [imgLoaded, setImgLoaded] = useState(false); // image loading
 
   useEffect(() => {
-    const storedData = sessionStorage.getItem("summonerData");
-    const storedName = sessionStorage.getItem("summonerName");
-    const storedRegion = sessionStorage.getItem("region");
-
-    if (storedData) {
-      setData(JSON.parse(storedData));
-      setName(storedName || "");
-      setRegion(storedRegion || "");
+    if (!name) {
+      setLoading(false);
+      return;
     }
-  }, []);
 
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await api.get(
+          `/api/summary/${encodeURIComponent(name)}?tagLine=${encodeURIComponent(
+            tag
+          )}&region=${region}`
+        );
+        setData(res.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [name, tag, region]);
+
+  // 1) PAGE SPINNER (while fetching API)
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen items-center justify-center text-white bg-[#101822] gap-4">
+        <div className="h-12 w-12 border-4 border-[#00f6ff] border-t-transparent rounded-full animate-spin" />
+        <p className="text-gray-300 text-sm">Loading your Rift ReWrapped…</p>
+      </div>
+    );
+  }
+
+  // if fetch finished but no data (bad params)
   if (!data) {
     return (
       <div className="flex flex-col min-h-screen items-center justify-center text-white bg-[#101822]">
@@ -27,8 +56,7 @@ export default function StatsPage() {
     );
   }
 
-const matchesToShow = data.stats?.matches?.slice(0, filterCount) || [];
-
+  const matchesToShow = data.stats?.matches?.slice(0, filterCount) || [];
 
   return (
     <div className="min-h-screen bg-[#101822] text-white font-display flex flex-col">
@@ -62,11 +90,28 @@ const matchesToShow = data.stats?.matches?.slice(0, filterCount) || [];
       <main className="flex flex-1 flex-col py-10 px-6 md:px-12 gap-10">
         {/* Top Section */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          {/* Left: 3D Model Placeholder */}
+          {/* Left: Image with spinner */}
           <div className="flex items-center justify-center rounded-xl border border-white/10 bg-white/5 p-6">
-            <div className="h-64 w-64 flex items-center justify-center bg-gradient-to-br from-[#136dec33] to-transparent rounded-xl">
-              {/* Placeholder for 3D Model */}
-              <p className="text-gray-400 text-sm">3D Model Coming Soon</p>
+            <div className="relative h-64 w-64 flex items-center justify-center bg-gradient-to-br from-[#136dec33] to-transparent rounded-xl overflow-hidden">
+              {/* Image spinner */}
+              {!imgLoaded && data.stats?.heroImageUrl && (
+                <div className="flex flex-col items-center gap-2 absolute inset-0 justify-center">
+                  <div className="h-10 w-10 border-4 border-[#00f6ff] border-t-transparent rounded-full animate-spin" />
+                  <p className="text-xs text-gray-300">Loading portrait…</p>
+                </div>
+              )}
+
+              {data.stats?.heroImageUrl ? (
+                <img
+                  src={data.stats.heroImageUrl}
+                  alt="Champion"
+                  onLoad={() => setImgLoaded(true)}
+                  className={`h-full w-full object-contain transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"
+                    }`}
+                />
+              ) : (
+                <p className="text-gray-400 text-sm">No portrait available</p>
+              )}
             </div>
           </div>
 
@@ -75,31 +120,41 @@ const matchesToShow = data.stats?.matches?.slice(0, filterCount) || [];
             <div>
               <h1 className="text-3xl font-bold">
                 {data.summoner?.name}
-                <span className="text-gray-400">#{data.summoner?.tagLine}</span>
+                <span className="text-gray-400">#{data.stats.summoner?.tagLine}</span>
               </h1>
               <p className="text-gray-400">
-                Level {data.summoner?.level} - Region {region.toUpperCase()}
+                Level {data.stats.summoner?.level} - Region {region.toUpperCase()}
               </p>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div className="bg-gray-800/50 border border-white/10 p-4 rounded-lg text-center">
                 <p className="text-sm text-gray-400">Win Rate</p>
-                <p className="text-2xl font-bold text-green-400">{data.winRate}%</p>
+                <p className="text-2xl font-bold text-green-400">
+                  {data.stats.winRate}%
+                </p>
               </div>
               <div className="bg-gray-800/50 border border-white/10 p-4 rounded-lg text-center">
                 <p className="text-sm text-gray-400">Avg. KDA</p>
-                <p className="text-2xl font-bold">{data.kda}</p>
+                <p className="text-2xl font-bold">{data.stats.kda}</p>
               </div>
               <div className="bg-gray-800/50 border border-white/10 p-4 rounded-lg text-center">
-                <p className="text-sm text-gray-400">Matches</p>
-                <p className="text-2xl font-bold">{data.totalGames}</p>
+                <p className="text-sm text-gray-400">Kills</p>
+                <p className="text-2xl font-bold">{data.stats.lifetimeKills}</p>
               </div>
               <div className="bg-gray-800/50 border border-white/10 p-4 rounded-lg text-center">
-                <p className="text-sm text-gray-400">Top Role</p>
+                <p className="text-sm text-gray-400">Assists</p>
+                <p className="text-2xl font-bold">{data.stats.lifetimeAssists}</p>
+              </div>
+              <div className="bg-gray-800/50 border border-white/10 p-4 rounded-lg text-center">
+                <p className="text-sm text-gray-400">Deaths</p>
+                <p className="text-2xl font-bold">{data.stats.lifetimeDeaths}</p>
+              </div>
+              <div className="bg-gray-800/50 border border-white/10 p-4 rounded-lg text-center">
+                <p className="text-sm text-gray-400">Top Champs</p>
                 <p className="text-md font-bold">
-                  {data.topChamps?.map((c: any) => c.name).join(", ")}
+                  {data.stats.topChamps?.map((c: any) => c.name).join(", ")}
                 </p>
               </div>
             </div>
@@ -112,11 +167,10 @@ const matchesToShow = data.stats?.matches?.slice(0, filterCount) || [];
             <button
               key={count}
               onClick={() => setFilterCount(count)}
-              className={`px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
-                filterCount === count
+              className={`px-4 py-2 rounded-md text-sm font-semibold transition-colors ${filterCount === count
                   ? "bg-[#136dec] text-white"
                   : "text-gray-300 hover:bg-gray-700/50"
-              }`}
+                }`}
             >
               {count} Games
             </button>
@@ -126,7 +180,9 @@ const matchesToShow = data.stats?.matches?.slice(0, filterCount) || [];
         {/* AI Coaching Summary */}
         <div className="rounded-lg border border-white/10 bg-gray-800/50 p-4">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#00f6ff]">auto_awesome</span>
+            <span className="material-symbols-outlined text-[#00f6ff]">
+              auto_awesome
+            </span>
             <h3 className="font-semibold text-[#00f6ff]">AI Coaching</h3>
           </div>
           <p className="mt-2 text-sm text-gray-300">{data.summary}</p>
@@ -167,11 +223,10 @@ const matchesToShow = data.stats?.matches?.slice(0, filterCount) || [];
               </div>
               <div className="md:col-span-2 flex justify-center">
                 <span
-                  className={`px-3 py-1 rounded-md text-sm font-semibold ${
-                    match.win
+                  className={`px-3 py-1 rounded-md text-sm font-semibold ${match.win
                       ? "bg-green-500/10 text-green-400"
                       : "bg-red-500/10 text-red-400"
-                  }`}
+                    }`}
                 >
                   {match.win ? "Victory" : "Defeat"}
                 </span>

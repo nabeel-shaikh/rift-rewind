@@ -17,28 +17,11 @@ export default function Home() {
 
   const fetchAll = async () => {
     if (!name.trim()) return;
-    setLoading(true);
-    setError("");
+    const [gameName, tag = region.toUpperCase()] = name.split("#");
 
-    try {
-      const [gameName, tag = region.toUpperCase()] = name.split("#"); // default tag from region
-      const response = await api.get<CombinedResponse>(
-        `/api/summary/${encodeURIComponent(gameName)}?tagLine=${encodeURIComponent(tag)}`
-      );
-
-      // ✅ Save the data to sessionStorage
-      sessionStorage.setItem("summonerData", JSON.stringify(response.data));
-      sessionStorage.setItem("summonerName", gameName);
-      sessionStorage.setItem("region", region);
-
-      // ✅ Redirect to /stats
-      router.push("/stats");
-    } catch (e: any) {
-      console.error("Fetch failed:", e);
-      setError("Failed to load data. Check the Riot ID (name#tag) and try again.");
-    } finally {
-      setLoading(false);
-    }
+    router.push(
+      `/stats?region=${region}&name=${encodeURIComponent(gameName)}&tag=${encodeURIComponent(tag)}`
+    );
   };
 
   return (
