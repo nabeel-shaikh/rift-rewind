@@ -1,6 +1,6 @@
 // server/src/controllers/riot.controller.js
 const { fetchRiotStats, fetchProfile, fetchRecentMatches, fetchMastery, fetchDerivedRankedStats } = require("../services/riot.service");
-const { generateSummary } = require("../services/bedrock.service");
+const { generateSummary, generateComparison } = require("../services/bedrock.service");
 
 // GET /api/riot/:summonerName
 async function getSummary(req, res) {
@@ -106,6 +106,17 @@ async function compareSummoners(req, res) {
       fetchRiotStats(region, b, btag, { count: Number(count) })
     ]);
 
+    // Get AI comparison
+    const player1Name = `${aStats.summoner.name}#${aStats.summoner.tagLine}`;
+    const player2Name = `${bStats.summoner.name}#${bStats.summoner.tagLine}`;
+    
+    const aiComparison = await generateComparison({
+      player1: player1Name,
+      player2: player2Name,
+      stats1: aStats,
+      stats2: bStats
+    });
+
     // tiny compare object you can display on frontend
     const comparison = {
       region,
@@ -118,7 +129,8 @@ async function compareSummoners(req, res) {
           ? "tie"
           : Number(aStats.winRate) > Number(bStats.winRate)
             ? aStats.summoner.name
-            : bStats.summoner.name
+            : bStats.summoner.name,
+      aiAnalysis: aiComparison
     };
 
     res.json(comparison);
