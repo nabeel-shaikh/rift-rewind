@@ -74,11 +74,8 @@ export default function StatsPage() {
           <h2 className="text-lg font-bold">Replay.gg</h2>
         </div>
         <div className="flex items-center gap-6 text-sm font-medium">
-          <a className="text-gray-300 hover:text-[#00f6ff]" href="#">
-            Dashboard
-          </a>
-          <a className="text-gray-300 hover:text-[#00f6ff]" href="#">
-            Leaderboards
+          <a className="text-gray-300 hover:text-[#00f6ff]" href="/compare">
+            Compare Friends
           </a>
           <button className="rounded-md bg-[#00f6ff]/10 px-4 py-2 text-[#00f6ff] hover:bg-[#00f6ff]/20">
             Rift ReWrapped
@@ -180,9 +177,7 @@ export default function StatsPage() {
         {/* AI Coaching Summary */}
         <div className="rounded-lg border border-white/10 bg-gray-800/50 p-4">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#00f6ff]">
-              auto_awesome
-            </span>
+            
             <h3 className="font-semibold text-[#00f6ff]">AI Coaching</h3>
           </div>
           <p className="mt-2 text-sm text-gray-300">{data.summary}</p>
