@@ -1,4 +1,6 @@
 "use client";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/lib/axios";
 
@@ -20,6 +22,7 @@ type ComparisonResult = {
 };
 
 export default function Compare() {
+  const router = useRouter();
   const [region1, setRegion1] = useState("na1");
   const [name1, setName1] = useState("");
   const [region2, setRegion2] = useState("na1");
@@ -61,9 +64,22 @@ export default function Compare() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#101822] text-white font-display">
-      <header className="flex items-center justify-center border-b border-white/10 px-6 py-4 md:px-10">
-        <div className="flex items-center gap-3">
+    <div
+      className="min-h-screen flex flex-col bg-[#101822] text-white font-display"
+      style={{
+        backgroundImage: "url('assets/images/compare_page.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      <header className="flex items-center justify-between border-b border-white/10 px-6 py-4 md:px-10">
+        <button
+          onClick={() => router.back()}
+          className="text-sm text-gray-300 hover:text-white transition-colors"
+        >
+          ← Back
+        </button>
+        <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition">
           <svg
             fill="currentColor"
             viewBox="0 0 48 48"
@@ -72,14 +88,16 @@ export default function Compare() {
           >
             <path d="M42.17 20.17L27.83 5.83c1.31 1.31.57 4.36-1.63 7.94-1.35 2.19-3.24 4.58-5.53 6.88-2.3 2.3-4.68 4.18-6.88 5.53-3.58 2.2-6.63 2.94-7.94 1.63l14.35 14.35c1.31 1.31 4.36.57 7.94-1.63 2.19-1.35 4.58-3.24 6.88-5.53 2.3-2.3 4.18-4.68 5.53-6.88 2.2-3.58 2.94-6.63 1.63-7.94Z"></path>
           </svg>
-        </div>
+          <h2 className="text-lg font-bold">Replay.gg</h2>
+        </Link>
+        <div className="w-16" />
       </header>
 
       <main className="flex flex-1 flex-col items-center justify-center text-center p-6 space-y-8">
         <div>
-          <h2 className="text-3xl font-bold">Compare Players</h2>
+          <h2 className="text-3xl font-bold">LOL Player Comparator</h2>
           <p className="text-gray-300 text-lg mt-2">
-            Enter two Riot IDs to compare their performance
+            Want to know who's better? Compare their stats and see who's got the edge!
           </p>
         </div>
 

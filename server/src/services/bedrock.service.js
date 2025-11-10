@@ -2,10 +2,12 @@ const { BedrockRuntimeClient, InvokeModelCommand } = require("@aws-sdk/client-be
 
 const client = new BedrockRuntimeClient({
   region: process.env.AWS_REGION || "us-east-1",
-  credentials: process.env.AWS_ACCESS_KEY_ID ? {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-  } : undefined
+  credentials: process.env.AWS_ACCESS_KEY_ID
+    ? {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      }
+    : undefined,
 });
 
 // Turn your numeric stats into a friendly recap
@@ -115,4 +117,101 @@ Analyze both players' stats comprehensively and make your pick. Start your respo
   };
 }
 
-module.exports = { generateSummary, generateComparison };
+async function suggestChampions({ topChamps = [], matches = [] }) {
+  const fallbackPool = topChamps.length
+    ? topChamps.slice(0, 3).map((champ, idx) => ({
+        name: champ.name || `Champion ${idx + 1}`,
+        reason: `Demo suggestion based on your success with ${champ.name || "this champion"}.`,
+      }))
+    : [
+        { name: "Karma", reason: "A reliable enchanter that pairs well with your current roster." },
+        { name: "Ezreal", reason: "Mobile marksman to diversify your damage profile." },
+        { name: "Sejuani", reason: "Frontline engage to complement your existing champions." },
+      ];
+
+  if (!process.env.AWS_ACCESS_KEY_ID) {
+    return fallbackPool;
+  }
+
+  const topChampLines =
+    topChamps && topChamps.length
+      ? topChamps
+          .map((c, index) => `${index + 1}. ${c.name || "Unknown"} - ${c.games || c.gamesPlayed || 0} games`)
+          .join("\n")
+      : "No top champion data";
+
+  const matchLines =
+    matches && matches.length
+      ? matches
+          .slice(0, 10)
+          .map(
+            (m, idx) =>
+              `${idx + 1}. ${m.champion || "Unknown"} - ${m.kills ?? 0}/${m.deaths ?? 0}/${m.assists ?? 0} ${
+                m.mode ? `(${m.mode})` : ""
+              } ${m.win ? "Win" : "Loss"}`
+          )
+          .join("\n")
+      : "No recent matches.";
+
+  const prompt = `
+You are an elite League of Legends coach. Recommend three new champions this player should try next.
+
+Respond ONLY with a valid JSON array of exactly three objects. Each object must have:
+- "name": Champion name
+- "reason": A concise 1-2 sentence reason
+
+Data to analyze:
+Top Champions:
+${topChampLines}
+
+Recent Matches:
+${matchLines}
+`;
+
+  const body = JSON.stringify({
+    anthropic_version: "bedrock-2023-05-31",
+    max_tokens: 400,
+    temperature: 0.7,
+    messages: [{ role: "user", content: [{ type: "text", text: prompt }]}],
+  });
+
+  try {
+    const res = await client.send(
+      new InvokeModelCommand({
+        modelId: process.env.BEDROCK_MODEL_ID || "anthropic.claude-3-sonnet-20240229-v1:0",
+        contentType: "application/json",
+        accept: "application/json",
+        body,
+      })
+    );
+
+    const txt = await res.body.transformToString();
+    const parsed = JSON.parse(txt);
+    const content = parsed?.content?.[0]?.text?.trim() || "[]";
+
+    let suggestions = [];
+    try {
+      suggestions = JSON.parse(content);
+    } catch {
+      // Sometimes the model might include extra prose; try to extract JSON via regex
+      const match = content.match(/\[[\s\S]*\]/);
+      if (match) {
+        suggestions = JSON.parse(match[0]);
+      }
+    }
+
+    if (!Array.isArray(suggestions) || !suggestions.length) {
+      return fallbackPool;
+    }
+
+    return suggestions.slice(0, 3).map((item, index) => ({
+      name: item.name || fallbackPool[index]?.name || `Champion ${index + 1}`,
+      reason: item.reason || fallbackPool[index]?.reason || "A strong complementary champion.",
+    }));
+  } catch (err) {
+    console.error("Bedrock suggestChampions failed:", err);
+    return fallbackPool;
+  }
+}
+
+module.exports = { generateSummary, generateComparison, suggestChampions };

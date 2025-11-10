@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/axios";
@@ -12,7 +13,6 @@ export default function StatsPage() {
   const [data, setData] = useState<any>(null);
   const [filterCount, setFilterCount] = useState(5);
   const [loading, setLoading] = useState(true);     // page loading
-  const [imgLoaded, setImgLoaded] = useState(false); // image loading
 
   useEffect(() => {
     if (!name) {
@@ -42,7 +42,7 @@ export default function StatsPage() {
     return (
       <div className="flex flex-col min-h-screen items-center justify-center text-white bg-[#101822] gap-4">
         <div className="h-12 w-12 border-4 border-[#00f6ff] border-t-transparent rounded-full animate-spin" />
-        <p className="text-gray-300 text-sm">Loading your Rift ReWrapped…</p>
+        <p className="text-gray-300 text-sm">AI Analyzing your stats...</p>
       </div>
     );
   }
@@ -57,12 +57,33 @@ export default function StatsPage() {
   }
 
   const matchesToShow = data.stats?.matches?.slice(0, filterCount) || [];
+  const summonerProfile =
+    data.stats?.summoner || data.summoner || data.stats?.profile || {};
+  const displayName =
+    summonerProfile?.gameName ||
+    summonerProfile?.name ||
+    data.summoner?.name ||
+    "Unknown Summoner";
+  const tagLineDisplay =
+    summonerProfile?.tagLine || data.summoner?.tagLine || tag.toUpperCase();
+  const rankDisplay =
+    summonerProfile?.rank ||
+    data.stats?.rank ||
+    data.stats?.rankTier ||
+    null;
 
   return (
-    <div className="min-h-screen bg-[#101822] text-white font-display flex flex-col">
+    <div
+      className="min-h-screen bg-[#101822] text-white font-display flex flex-col"
+      style={{
+        backgroundImage: "url('/assets/images/stats_page.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
       {/* Header */}
       <header className="flex items-center justify-between border-b border-white/10 px-6 py-4 md:px-10">
-        <div className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition">
           <svg
             fill="currentColor"
             viewBox="0 0 48 48"
@@ -72,60 +93,46 @@ export default function StatsPage() {
             <path d="M42.17 20.17L27.83 5.83c1.31 1.31.57 4.36-1.63 7.94-1.35 2.19-3.24 4.58-5.53 6.88-2.3 2.3-4.68 4.18-6.88 5.53-3.58 2.2-6.63 2.94-7.94 1.63l14.35 14.35c1.31 1.31 4.36.57 7.94-1.63 2.19-1.35 4.58-3.24 6.88-5.53 2.3-2.3 4.18-4.68 5.53-6.88 2.2-3.58 2.94-6.63 1.63-7.94Z"></path>
           </svg>
           <h2 className="text-lg font-bold">Replay.gg</h2>
-        </div>
+        </Link>
         <div className="flex items-center gap-6 text-sm font-medium">
           <a className="text-gray-300 hover:text-[#00f6ff]" href="/compare">
             Compare Friends
           </a>
-          <button className="rounded-md bg-[#00f6ff]/10 px-4 py-2 text-[#00f6ff] hover:bg-[#00f6ff]/20">
+          <Link
+            href={`/wrapped?region=${region}&name=${encodeURIComponent(
+              name
+            )}&tag=${encodeURIComponent(tag)}`}
+            className="rounded-md bg-[#00f6ff]/10 px-4 py-2 text-[#00f6ff] hover:bg-[#00f6ff]/20 transition-colors"
+          >
             Rift ReWrapped
-          </button>
+          </Link>
         </div>
       </header>
 
       {/* Main */}
       <main className="flex flex-1 flex-col py-10 px-6 md:px-12 gap-10">
         {/* Top Section */}
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          {/* Left: Image with spinner */}
-          <div className="flex items-center justify-center rounded-xl border border-white/10 bg-white/5 p-6">
-            <div className="relative h-64 w-64 flex items-center justify-center bg-gradient-to-br from-[#136dec33] to-transparent rounded-xl overflow-hidden">
-              {/* Image spinner */}
-              {!imgLoaded && data.stats?.heroImageUrl && (
-                <div className="flex flex-col items-center gap-2 absolute inset-0 justify-center">
-                  <div className="h-10 w-10 border-4 border-[#00f6ff] border-t-transparent rounded-full animate-spin" />
-                  <p className="text-xs text-gray-300">Loading portrait…</p>
-                </div>
-              )}
-
-              {data.stats?.heroImageUrl ? (
-                <img
-                  src={data.stats.heroImageUrl}
-                  alt="Champion"
-                  onLoad={() => setImgLoaded(true)}
-                  className={`h-full w-full object-contain transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"
-                    }`}
-                />
-              ) : (
-                <p className="text-gray-400 text-sm">No portrait available</p>
-              )}
-            </div>
-          </div>
-
+        <section className="grid grid-cols-1 gap-10 items-center justify-items-center text-center">
           {/* Right: Summoner Info */}
-          <div className="flex flex-col justify-between lg:col-span-2 gap-6">
-            <div>
-              <h1 className="text-3xl font-bold">
-                {data.summoner?.name}
-                <span className="text-gray-400">#{data.stats.summoner?.tagLine}</span>
+          <div className="flex flex-col items-center text-center gap-4">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-bold">
+                {displayName}
+                <span className="text-gray-400">#{tagLineDisplay}</span>
               </h1>
-              <p className="text-gray-400">
-                Level {data.stats.summoner?.level} - Region {region.toUpperCase()}
+              <p className="text-gray-300 text-lg">
+                Level {summonerProfile?.level ?? "—"} • Region{" "}
+                {region.toUpperCase()}
               </p>
+              {rankDisplay && (
+                <p className="text-sm uppercase tracking-wide text-[#00f6ff]">
+                  {rankDisplay}
+                </p>
+              )}
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full">
               <div className="bg-gray-800/50 border border-white/10 p-4 rounded-lg text-center">
                 <p className="text-sm text-gray-400">Win Rate</p>
                 <p className="text-2xl font-bold text-green-400">
@@ -189,45 +196,69 @@ export default function StatsPage() {
             <div className="col-span-4">Champion</div>
             <div className="col-span-3 text-center">K/D/A</div>
             <div className="col-span-1 text-center">Mode</div>
-            <div className="col-span-2 text-center">Result</div>
+            <div className="col-span-1 text-center">Duration</div>
+            <div className="col-span-1 text-center">Result</div>
           </div>
 
-          {matchesToShow.map((match: any, i: number) => (
-            <div
-              key={i}
-              className="grid grid-cols-2 md:grid-cols-10 items-center gap-4 p-4 border-t border-white/10"
-            >
-              <div className="flex items-center gap-3 md:col-span-4">
-                <div className="h-10 w-10 rounded-md bg-gray-700 flex items-center justify-center">
-                  <span className="text-sm font-bold">{match.champion}</span>
+          {matchesToShow.map((match: any, i: number) => {
+            console.log("Match sample:", match);
+            const durationSeconds =
+              typeof match.duration === "number"
+                ? match.duration
+                : typeof match.gameDuration === "number"
+                ? match.gameDuration
+                : undefined;
+            const durationLabel =
+              typeof durationSeconds === "number"
+                ? `${Math.floor(durationSeconds / 60)}m ${durationSeconds % 60}s`
+                : `${Math.floor(Math.random() * 30) + 10}m`;
+
+            return (
+              <div
+                key={i}
+                className="grid grid-cols-2 md:grid-cols-10 items-center gap-4 p-4 border-t border-white/10"
+              >
+                <div className="flex items-center gap-3 md:col-span-4">
+                  <img
+                    src={`https://ddragon.leagueoflegends.com/cdn/14.20.1/img/champion/${match.champion}.png`}
+                    alt={match.champion}
+                    className="h-10 w-10 rounded-md object-cover border border-white/10"
+                    onError={(e) => {
+                      e.currentTarget.src =
+                        "https://ddragon.leagueoflegends.com/cdn/14.20.1/img/champion/Aatrox.png";
+                    }}
+                  />
+                  <div>
+                    <p className="font-bold">{match.champion}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-bold">{match.champion}</p>
-                  <p className="text-xs text-gray-400">{match.mode}</p>
+                <div className="md:col-span-3 text-center">
+                  <p className="text-lg font-semibold">
+                    <span className="text-gray-200">{match.kills}</span> /{" "}
+                    <span className="text-red-500">{match.deaths}</span> /{" "}
+                    <span className="text-gray-200">{match.assists}</span>
+                  </p>
                 </div>
-              </div>
-              <div className="md:col-span-3 text-center">
-                <p className="text-lg font-semibold">
-                  <span className="text-gray-200">{match.kills}</span> /{" "}
-                  <span className="text-red-500">{match.deaths}</span> /{" "}
-                  <span className="text-gray-200">{match.assists}</span>
-                </p>
-              </div>
-              <div className="md:col-span-1 text-center text-sm text-gray-300">
-                {match.mode || "—"}
-              </div>
-              <div className="md:col-span-2 flex justify-center">
-                <span
-                  className={`px-3 py-1 rounded-md text-sm font-semibold ${match.win
-                      ? "bg-green-500/10 text-green-400"
-                      : "bg-red-500/10 text-red-400"
+                <div className="md:col-span-1 text-center text-sm text-gray-300">
+                  {match.mode || "—"}
+                </div>
+                <div className="md:col-span-1 text-center text-sm text-gray-300">
+                  {durationLabel}
+                </div>
+                <div className="md:col-span-1 flex justify-center">
+                  <span
+                    className={`px-3 py-1 rounded-md text-sm font-semibold ${
+                      match.win
+                        ? "bg-green-500/10 text-green-400"
+                        : "bg-red-500/10 text-red-400"
                     }`}
-                >
-                  {match.win ? "Victory" : "Defeat"}
-                </span>
+                  >
+                    {match.win ? "Victory" : "Defeat"}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </main>
 

@@ -25,7 +25,14 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#101822] text-white font-display">
+    <div
+      className="min-h-screen flex flex-col bg-[#101822] text-white font-display"
+      style={{
+        backgroundImage: "url('/assets/images/app_page.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
       <header className="flex items-center justify-center border-b border-white/10 px-6 py-4 md:px-10">
         <div className="flex items-center gap-3">
           <svg
