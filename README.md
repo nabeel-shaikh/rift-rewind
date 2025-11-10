@@ -1,5 +1,4 @@
-🎮 **Replay.gg – AI-Powered League Coaching & Wrapped Insights
-**
+🎮 **Replay.gg – AI-Powered League Coaching & Wrapped Insights**
 Replay.gg transforms your League of Legends stats into a Spotify Wrapped–style experience.
 It combines live match data from the Riot Games API with AWS Bedrock (Claude 3 Sonnet) to generate personal coaching summaries, insights, and champion recommendations — all visualized in a clean Next.js frontend.
 
