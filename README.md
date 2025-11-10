@@ -49,12 +49,16 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
 4. Run project
 For this, it is easier to have two terminals open.
 For Terminal 1 (run first):
-1. cd server
-2. npm start
+
+          cd server
+          
+          npm start
 
 For Terminal 2 (run once server is running):
-1. cd client
-2. npm start
+
+          cd client
+          
+          npm start
 
 Finally, visit: http://localhost:3000
 
