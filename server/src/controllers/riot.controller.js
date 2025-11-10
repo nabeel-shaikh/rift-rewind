@@ -1,6 +1,13 @@
 // server/src/controllers/riot.controller.js
-const { fetchRiotStats, fetchProfile, fetchRecentMatches, fetchMastery, fetchDerivedRankedStats } = require("../services/riot.service");
-const { generateSummary, generateComparison } = require("../services/bedrock.service");
+const {
+  fetchRiotStats,
+  fetchProfile,
+  fetchRecentMatches,
+  fetchMastery,
+  fetchDerivedRankedStats,
+} = require("../services/riot.service");
+const { generateSummaries, generateSummary, generateComparison } = require("../services/bedrock.service");
+const { buildStatsByCount } = require("../utils/statsByCount");
 
 // GET /api/riot/:summonerName
 async function getSummary(req, res) {
@@ -11,8 +18,16 @@ async function getSummary(req, res) {
     console.log("Requesting data for:", summonerName, "in", region);
 
     const stats = await fetchRiotStats(region, summonerName, tagLine);
-    const summary = await generateSummary({ summonerName, stats });
-    res.json({ summonerName, region, tagLine, stats, summary }); // ✅ just return Riot data
+    const statsByCount = buildStatsByCount(stats?.matches || [], [5, 10, 15]);
+    const summaries = await generateSummaries({ summonerName, statsByCount });
+    res.json({
+      summonerName,
+      region,
+      tagLine,
+      stats,
+      summaries,
+      summary: summaries["15"],
+    }); // ✅ just return Riot data
 
   } catch (err) {
     console.error("Error in getRiotData:", err.message);

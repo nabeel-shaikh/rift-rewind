@@ -104,7 +104,7 @@ export default function StatsPage() {
             )}&tag=${encodeURIComponent(tag)}`}
             className="rounded-md bg-[#00f6ff]/10 px-4 py-2 text-[#00f6ff] hover:bg-[#00f6ff]/20 transition-colors"
           >
-            Rift ReWrapped
+            Rift Wrapped
           </Link>
         </div>
       </header>
@@ -187,7 +187,12 @@ export default function StatsPage() {
             
             <h3 className="font-semibold text-[#00f6ff]">AI Coaching</h3>
           </div>
-          <p className="mt-2 text-sm text-gray-300">{data.summary}</p>
+          <p className="mt-2 text-sm text-gray-300">
+            {data.summaries?.[filterCount] ??
+              data.summaries?.[String(filterCount)] ??
+              data.summary ??
+              "Generating coaching insights..."}
+          </p>
         </div>
 
         {/* Match Table */}

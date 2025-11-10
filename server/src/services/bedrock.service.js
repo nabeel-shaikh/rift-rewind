@@ -1,4 +1,5 @@
 const { BedrockRuntimeClient, InvokeModelCommand } = require("@aws-sdk/client-bedrock-runtime");
+const { buildStatsByCount } = require("../utils/statsByCount");
 
 const client = new BedrockRuntimeClient({
   region: process.env.AWS_REGION || "us-east-1",
@@ -10,42 +11,134 @@ const client = new BedrockRuntimeClient({
     : undefined,
 });
 
-// Turn your numeric stats into a friendly recap
-async function generateSummary({ summonerName, stats }) {
-  // If Bedrock isn’t configured yet, return a demo string (helps dev UX)
+function formatSegmentLine(count, segment = {}) {
+  const gamesPlayed = segment.games ?? count;
+  const winRate = segment.winRate ?? "0.0";
+  const kda = segment.kda ?? "0.00";
+  const champs =
+    (segment.topChamps || [])
+      .map((c) => c?.name)
+      .filter(Boolean)
+      .join(", ") || "None";
+  return `Last ${count} games (${gamesPlayed} recorded) — Win Rate: ${winRate}%, KDA: ${kda}, Top Champs: ${champs}`;
+}
+
+function buildFallbackSummaries(summonerName, statsByCount) {
+  return {
+    "5": `Demo coaching summary for ${summonerName} (5 games): win rate ${
+      statsByCount?.[5]?.winRate ?? "0.0"
+    }%, KDA ${statsByCount?.[5]?.kda ?? "0.00"}. Keep refining your ${(
+      statsByCount?.[5]?.topChamps || []
+    )
+      .map((c) => c.name)
+      .join(", ") || "favorite champions"} picks.`,
+    "10": `Demo coaching summary for ${summonerName} (10 games): win rate ${
+      statsByCount?.[10]?.winRate ?? "0.0"
+    }%, KDA ${statsByCount?.[10]?.kda ?? "0.00"}. Focus on consistency and objective control.`,
+    "15": `Demo coaching summary for ${summonerName} (15 games): win rate ${
+      statsByCount?.[15]?.winRate ?? "0.0"
+    }%, KDA ${statsByCount?.[15]?.kda ?? "0.00"}. Keep building around ${
+      (statsByCount?.[15]?.topChamps || [])
+        .map((c) => c.name)
+        .join(", ") || "your comfort picks"
+    }.`,
+  };
+}
+
+async function generateSummaries({ summonerName, statsByCount }) {
+  const fallback = buildFallbackSummaries(summonerName, statsByCount);
+
   if (!process.env.AWS_ACCESS_KEY_ID) {
-    return `Demo summary for ${summonerName}: ${stats.winRate}% win rate, KDA ${stats.kda}. Top champs: ${stats.topChamps.map(c=>c.name).join(", ")}.`;
+    return fallback;
   }
 
   const prompt = `
 You are an enthusiastic League of Legends coach.
-Create a short, upbeat recap for the player below.
-Keep it to 120-160 words. Use second person ("you").
+Using the player's stats, create three short motivational summaries:
+- Last 5 games (Segment A)
+- Last 10 games (Segment B)
+- Last 15 games (Segment C)
 
 Player: ${summonerName}
-Stats (last ${stats.totalGames} games):
-- Win rate: ${stats.winRate}%
-- KDA: ${stats.kda}
-- Top champions: ${stats.topChamps.map(c => `${c.name} (${c.games})`).join(", ")}
+
+Stats:
+${formatSegmentLine(5, statsByCount?.[5])}
+${formatSegmentLine(10, statsByCount?.[10])}
+${formatSegmentLine(15, statsByCount?.[15])}
+
+Respond ONLY with valid JSON in this format:
+{
+  "5": "string (summary for 5 games)",
+  "10": "string (summary for 10 games)",
+  "15": "string (summary for 15 games)"
+}
 `;
 
   const body = JSON.stringify({
     anthropic_version: "bedrock-2023-05-31",
-    max_tokens: 350,
-    messages: [{ role: "user", content: [{ type: "text", text: prompt }]}]
+    max_tokens: 400,
+    temperature: 0.7,
+    messages: [{ role: "user", content: [{ type: "text", text: prompt }]}],
   });
 
-  const res = await client.send(new InvokeModelCommand({
-    modelId: process.env.BEDROCK_MODEL_ID || "anthropic.claude-3-sonnet-20240229-v1:0",
-    contentType: "application/json",
-    accept: "application/json",
-    body
-  }));
+  try {
+    const res = await client.send(
+      new InvokeModelCommand({
+        modelId: process.env.BEDROCK_MODEL_ID || "anthropic.claude-3-sonnet-20240229-v1:0",
+        contentType: "application/json",
+        accept: "application/json",
+        body,
+      })
+    );
 
-  const txt = await res.body.transformToString();
-  const parsed = JSON.parse(txt);
-  const content = parsed?.content?.[0]?.text || "Summary unavailable.";
-  return content;
+    const txt = await res.body.transformToString();
+    const parsed = JSON.parse(txt);
+    const content = parsed?.content?.[0]?.text || "";
+
+    let summaries;
+    try {
+      summaries = JSON.parse(content);
+    } catch {
+      const match = content.match(/\{[\s\S]*\}/);
+      summaries = match ? JSON.parse(match[0]) : undefined;
+    }
+
+    if (
+      !summaries ||
+      typeof summaries !== "object" ||
+      !summaries["5"] ||
+      !summaries["10"] ||
+      !summaries["15"]
+    ) {
+      return fallback;
+    }
+
+    return {
+      "5": String(summaries["5"]).trim(),
+      "10": String(summaries["10"]).trim(),
+      "15": String(summaries["15"]).trim(),
+    };
+  } catch (err) {
+    console.error("Bedrock generateSummaries failed:", err);
+    return fallback;
+  }
+}
+
+// Backwards-compatible helper for endpoints that still expect a single string
+async function generateSummary({ summonerName, stats }) {
+  const statsByCount = buildStatsByCount(stats?.matches || [], [5, 10, 15]);
+  // fallback to provided stats for 15 games if matches list is empty
+  if (!statsByCount[15]) {
+    statsByCount[15] = {
+      games: stats?.matches?.length || stats?.totalGames || 0,
+      winRate: stats?.winRate ?? "0.0",
+      kda: stats?.kda ?? "0.00",
+      topChamps: stats?.topChamps ?? [],
+    };
+  }
+
+  const summaries = await generateSummaries({ summonerName, statsByCount });
+  return summaries["15"];
 }
 
 // Compare two players and determine who you'd rather have on your team
@@ -214,4 +307,4 @@ ${matchLines}
   }
 }
 
-module.exports = { generateSummary, generateComparison, suggestChampions };
+module.exports = { generateSummaries, generateSummary, generateComparison, suggestChampions };

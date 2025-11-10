@@ -340,10 +340,10 @@ export default function RiftWrappedPage() {
       style={{
         backgroundColor: "#0a1220",
         backgroundImage:
-          "linear-gradient(135deg, rgba(19,109,236,0.25), rgba(10,18,32,0.95)), url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2392a4c9' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e\")",
+          "linear-gradient(135deg, rgba(19,109,236,0.35), rgba(10,18,32,0.95)), url('/assets/images/wrapped_page.png')",
         backgroundRepeat: "no-repeat, repeat",
-        backgroundSize: "cover, 20px 20px",
-        backgroundAttachment: "fixed, scroll",
+        backgroundSize: "cover",
+        backgroundAttachment: "fixed",
       }}
     >
       <header className="flex items-center justify-between border-b border-white/10 px-6 py-4 md:px-10">

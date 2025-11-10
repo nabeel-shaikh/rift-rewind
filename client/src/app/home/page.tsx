@@ -49,7 +49,7 @@ export default function Home() {
       <main className="flex flex-1 flex-col items-center justify-center text-center p-6 space-y-4">
         <h2 className="text-3xl font-bold">Replay.gg</h2>
         <p className="text-gray-300 text-lg mb-6">
-          AI-powered League of Legends performance analysis — try our Wrapped Feature!
+          AI-powered League of Legends performance analysis — try our our Friend Comparison and  Rift Wrapped Features!
         </p>
 
         {/* Input Controls */}
