@@ -11,23 +11,6 @@ It combines live match data from the Riot Games API with AWS Bedrock (Claude 3 S
 🎨 **Responsive Interface** – Next.js App Router + Tailwind CSS for a sleek, immersive UI.
 🏆 **“Rift Wrapped” Mode** – A year-end recap inspired by Spotify Wrapped, highlighting your gameplay story.
 
-The project structure:
-
-replay-gg/
-├── client/                     # Next.js 16 (React 19) frontend
-│   ├── src/app/                # App Router pages (home, stats, compare, wrapped)
-│   ├── src/lib/axios.ts        # Shared Axios helper for API calls
-│   └── public/assets/          # Backgrounds, images, and UI assets
-│
-├── server/                     # Express backend (Node 18+)
-│   ├── src/controllers/        # summary.controller.js, ai.controller.js, etc.
-│   ├── src/services/           # riot.service.js, bedrock.service.js
-│   ├── src/middleware/         # Error and validation handlers
-│   └── src/index.js            # Server entry point
-│
-├── .env.example                # Example environment variables
-├── LICENSE                     # MIT License
-└── README.md                   # Project documentation
          
 
 
