@@ -14,7 +14,7 @@ It combines live match data from the Riot Games API with AWS Bedrock (Claude 3 S
          
 
 
-Here are the setup instructions
+**Here are the setup instructions**
 1. Clone the Repo
 run these 2 commands:
 git clone https://github.com/<nabeel-shaikh>/rift-rewind.git
@@ -51,7 +51,7 @@ Finally, visit: http://localhost:3000
 
 
 
-Tech Stack:
+**Tech Stack:**
 | Layer                     | Technologies                                   |
 | ------------------------- | ---------------------------------------------- |
 | **Frontend**              | Next.js 16 (React 19), Tailwind CSS v4         |
@@ -62,7 +62,7 @@ Tech Stack:
 | **Hosting (Recommended)** | Frontend → Vercel, Backend → Render or Railway |
 
 
-🤖 How It Works
+🤖 **How It Works**
 
 The user searches their summoner on the home page.
 The frontend sends a request to /api/summary/:summonerName via Axios.
@@ -72,11 +72,13 @@ The frontend displays the summaries dynamically as users switch tabs.
 A separate endpoint /api/ai/suggestChampions asks Bedrock to recommend three new champions to try next.
 
 
-📸 Demo
+📸 **Demo**
+
 Coming soon — hosted demo (planned for Vercel + Render).
 For now, you can run the app locally with your Riot and AWS keys.
 
-🔒 License
+🔒 **License**
+
 This project is open-source under the MIT License.
 Copyright 2025 Nabeel Shaikh
 Permission is hereby granted, free of charge, to any person obtaining a copy
