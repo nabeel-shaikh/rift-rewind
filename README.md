@@ -20,17 +20,17 @@ It combines live match data from the Riot Games API with AWS Bedrock (Claude 3 S
 
 run these 2 commands:
 
-git clone https://github.com/<nabeel-shaikh>/rift-rewind.git
+         git clone https://github.com/<username>/rift-rewind.git
 
-cd rift-rewind
+         cd rift-rewind
 
 2. Install dependencies
 
 Run these 2 commands:
 
-cd client && npm install
+         cd client && npm install
 
-cd ../server && npm install
+         cd ../server && npm install
 
 
 
